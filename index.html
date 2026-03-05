@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>WebAR Torre - MindAR</title>
+
+  <!-- A-Frame y MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+
+  <style>
+    body { margin:0; overflow:hidden; }
+  </style>
+
+  <script>
+    // Componente de gestos para MindAR
+    AFRAME.registerComponent('gesture-handler', {
+      init: function () {
+        const el = this.el;
+        const scene = document.querySelector('a-scene');
+
+        let currentScale = 1;
+        let startScale = 1;
+        let rotation = 0;
+
+        scene.addEventListener("renderstart", () => {
+          const hammer = new Hammer(scene.canvas);
+
+          hammer.get('pinch').set({ enable: true });
+          hammer.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+
+          // ROTACIÓN SUAVE
+          hammer.on("pan", (ev) => {
+            rotation += ev.deltaX * 0.2;
+            el.setAttribute("rotation", { x:0, y:rotation, z:0 });
+          });
+
+          // ZOOM INICIO
+          hammer.on("pinchstart", () => {
+            startScale = currentScale;
+          });
+
+          // ZOOM
+          hammer.on("pinch", (ev) => {
+            currentScale = startScale * ev.scale;
+            currentScale = Math.max(0.3, Math.min(currentScale, 4));
+            el.setAttribute("scale", { x: currentScale, y: currentScale, z: currentScale });
+          });
+        });
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true;" 
+           embedded
+           vr-mode-ui="enabled:false"
+           renderer="logarithmicDepthBuffer: true;">
+
+    <!-- Assets -->
+    <a-assets>
+      <a-asset-item id="modelo" src="Torre_escala.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- Iluminación -->
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
+    <a-entity light="type: hemisphere; intensity: 1; groundColor: #444"></a-entity>
+    <a-entity light="type: directional; intensity: 1.2" position="2 4 2"></a-entity>
+
+    <!-- Modelo sobre el marcador MindAR -->
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity gltf-model="#modelo"
+                scale="1 1 1"
+                position="0 0 0"
+                gesture-handler>
+      </a-entity>
+    </a-entity>
+
+    <!-- Cámara -->
+    <a-entity camera></a-entity>
+
+  </a-scene>
+</body>
+</html>
