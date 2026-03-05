@@ -35,7 +35,7 @@ hammer.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL })
 // ROTACION SUAVE
 hammer.on("pan", (ev) => {
 
-rotation += ev.deltaX * 0.2
+rotation += ev.deltaX * 0.05
 
 el.setAttribute("rotation", {
 x:0,
